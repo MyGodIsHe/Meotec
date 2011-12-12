@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 from django.views.generic.simple import direct_to_template
 from django.utils.translation import ugettext_lazy as _
-from froms import ManagerForm, ServerForm, SiteForm
+from forms import ManagerForm, ServerForm, SiteForm
 from models import Manager, Server, Site
 
 
