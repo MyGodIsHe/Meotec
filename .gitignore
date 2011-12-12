@@ -1,0 +1,7 @@
+*.pyc
+*.swp
+.idea
+.svn
+/settings/local.py
+Thumbs.db
+/media/

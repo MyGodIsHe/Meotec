@@ -1,0 +1,49 @@
+{% extends 'meotec/base.html' %}
+
+{% load i18n %}
+
+{% block title %}{% trans "Dashboard" %}{% endblock %}
+{% block h1 %}{% trans "Dashboard" %}{% endblock %}
+
+{% block head %}
+    <script type="text/javascript">
+        $(function() {
+            var server_list = $('.server-list li :checkbox').change(function() {
+                    var box = $(this);
+                    if (box.attr('checked'))
+                        box.parent().find(':checkbox').attr('checked', 'checked');
+                    else
+                        box.parent().find(':checkbox').removeAttr('checked');
+                }),
+                check_servers = $('#check-servers').change(function() {
+                    if (check_servers.attr('checked'))
+                        server_list.attr('checked', 'checked');
+                    else
+                        server_list.removeAttr('checked');
+                });
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <form action="" method="post" class="content">
+        <div class="half">
+            <h3><input type="checkbox" id="check-servers"/> {% trans "Servers" %}</h3>
+            <ul class="server-list">
+            {% for server in servers %}
+                <li><input type="checkbox"/> {{ server }}
+                    <ul>
+                    {% for site in server.site_set.all %}
+                        <li><input type="checkbox"/> {{ site }}</li>
+                    {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+        <div class="half">
+            <div class="well">
+            </div>
+        </div>
+    </form>
+{% endblock %}

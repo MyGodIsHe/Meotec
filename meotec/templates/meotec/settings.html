@@ -1,0 +1,43 @@
+{% extends 'meotec/base.html' %}
+
+{% load i18n %}
+
+{% block title %}{% trans "Settings" %}{% endblock %}
+{% block h1 %}{% trans "Settings" %}{% endblock %}
+
+{% block content %}
+    <form action="" method="post" class="content">
+        <div class="half">
+            <h3>{% trans "Servers" %} <a class="btn plus" href="{% url meotec:server_add %}">+</a></h3>
+            <ul class="server-list">
+            {% for server in servers %}
+                <li><a href="{% url meotec:server_edit server.id %}">{{ server }}</a> <a class="btn plus" href="{% url meotec:site_add server.id %}">+</a>
+                    <ul>
+                    {% for site in server.site_set.all %}
+                        <li><a href="{% url meotec:site_edit server.id site.id %}">{{ site }}</a></li>
+                    {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+        <div class="half">
+            <div class="line-h">
+                <h3>{% trans "Managers" %}
+                    <a class="btn plus" href="{% url meotec:manager_add %}">+</a>
+                    <a class="btn text success right" href="{% url meotec:manager_update %}">{% trans "Update" %}</a></h3>
+                <ul class="server-list">
+                {% for manager in managers %}
+                    <li><a href="{% url meotec:manager_edit manager.id %}">{{ manager }}</a>
+                        <ul>
+                    {% for name, command in manager.commands.items %}
+                        <li><strong>{{ name }}</strong> - {{ command.help }}</li>
+                    {% endfor %}
+                    </ul>
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </form>
+{% endblock %}
