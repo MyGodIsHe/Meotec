@@ -34,7 +34,8 @@ class Manager(models.Model):
         repo_name = self.get_repo_name()
         manager_path = os.path.join(settings.MEOTEC_MANAGERS_ROOT, repo_name)
         for command_name in find_commands(manager_path):
-            module = import_module('managers.%s.commands.%s' % (repo_name, command_name))
+            module = import_module('%s.%s.commands.%s' % (os.path.basename(settings.MEOTEC_MANAGERS_ROOT),
+                                                          repo_name, command_name))
             for value in module.__dict__.values():
                 if isinstance(value, type) and issubclass(value, BaseCommand):
                     command = value()
