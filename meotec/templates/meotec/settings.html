@@ -30,7 +30,7 @@
                 {% for manager in managers %}
                     <li><a href="{% url meotec:manager_edit manager.id %}">{{ manager }}</a>
                         <ul>
-                    {% for name, command in manager.commands.items %}
+                    {% for name, command in manager.commands %}
                         <li><strong>{{ name }}</strong> - {{ command.help }}</li>
                     {% endfor %}
                     </ul>

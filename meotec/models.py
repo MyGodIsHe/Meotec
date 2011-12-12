@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.management import find_commands
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from commands import BaseCommand
+from meotec.commands import BaseCommand
 from validators import regex_repo_name, validate_git
 
 
@@ -20,11 +20,14 @@ class Manager(models.Model):
         return regex_repo_name.search(self.repository).group(1)
 
     def update(self):
-        manager_path = os.path.join(settings.MEOTEC_MANAGERS_ROOT, self.get_repo_name())
-        if os.path.exists(manager_path):
-            call(["cd %s; git pull" % manager_path], shell=True)
+        if os.path.exists(self.repository) and not os.path.exists(os.path.join(self.repository, '.git')):
+            call(["rsync", "-r", "-delete", self.repository, settings.MEOTEC_MANAGERS_ROOT])
         else:
-            call(["cd %s; git clone %s" % (settings.MEOTEC_MANAGERS_ROOT, self.repository)], shell=True)
+            manager_path = os.path.join(settings.MEOTEC_MANAGERS_ROOT, self.get_repo_name())
+            if os.path.exists(manager_path):
+                call(["cd %s; git pull" % manager_path], shell=True)
+            else:
+                call(["cd %s; git clone %s" % (settings.MEOTEC_MANAGERS_ROOT, self.repository)], shell=True)
 
     def commands(self):
         commands = {}
@@ -32,9 +35,12 @@ class Manager(models.Model):
         manager_path = os.path.join(settings.MEOTEC_MANAGERS_ROOT, repo_name)
         for command_name in find_commands(manager_path):
             module = import_module('managers.%s.commands.%s' % (repo_name, command_name))
-            command = module.Command()
-            commands[command.title or command_name] = command
-        return commands
+            for value in module.__dict__.values():
+                if isinstance(value, type) and issubclass(value, BaseCommand):
+                    command = value()
+                    if command.title:
+                        commands[command.title] = command
+        return sorted(commands.items())
 
     def save(self, *args, **kwargs):
         if not self.name:

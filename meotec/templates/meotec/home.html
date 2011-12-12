@@ -43,6 +43,17 @@
         </div>
         <div class="half">
             <div class="well">
+                <ul class="server-list">
+                {% for manager in managers %}
+                    <li>{{ manager }}
+                        <ul>
+                    {% for name, command in manager.commands %}
+                        <li><a class="btn">{{ name }}</a> - {{ command.help }}</li>
+                    {% endfor %}
+                    </ul>
+                    </li>
+                {% endfor %}
+                </ul>
             </div>
         </div>
     </form>

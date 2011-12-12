@@ -9,6 +9,7 @@ from models import Manager, Server, Site
 def home(request):
     return direct_to_template(request, 'meotec/home.html', {
         'servers': Server.objects.all(),
+        'managers': Manager.objects.all(),
     })
 
 
