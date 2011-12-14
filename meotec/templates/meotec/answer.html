@@ -1,0 +1,13 @@
+{% load i18n %}<ul>
+{% for server, answer in answers.items %}
+    <li>{{ server }}{% if answer.0 %} - {{ answer.0 }}{% endif %}
+        {% if answer.1 %}
+            <ul>
+            {% for site, answer in answer.1.items %}
+                <li>{{ site }}{% if answer %} - {{ answer }}{% endif %}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </li>
+{% endfor %}
+</ul>

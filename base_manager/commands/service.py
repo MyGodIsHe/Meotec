@@ -1,4 +1,5 @@
 from django import forms
+from fabric.context_managers import settings
 from fabric.operations import sudo
 from meotec.commands import ServerCommand
 from django.utils.translation import ugettext_lazy as _
@@ -18,9 +19,9 @@ class MySqlCommand(ServerCommand):
         )),
     }
 
-    def run(self, server, command):
-        sudo("service mysql %s" % command)
-        return "OK"
+    def run(self, server, kwargs):
+        with settings(host_string=server.hostname):
+            return sudo("service mysql %s" % kwargs['command'])
 
 
 class MemcachedCommand(ServerCommand):
@@ -36,9 +37,9 @@ class MemcachedCommand(ServerCommand):
         )),
     }
 
-    def run(self, server, command):
-        sudo("service memcached %s" % command)
-        return "OK"
+    def run(self, server, kwargs):
+        with settings(host_string=server.hostname):
+            return sudo("service memcached %s" % kwargs['command'])
 
 
 class NginxCommand(ServerCommand):
@@ -56,6 +57,6 @@ class NginxCommand(ServerCommand):
         )),
     }
 
-    def run(self, server, command):
-        sudo("service nginx %s" % command)
-        return "OK"
+    def run(self, server, kwargs):
+        with settings(host_string=server.hostname):
+            return sudo("service nginx %s" % kwargs['command'])

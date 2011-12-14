@@ -30,36 +30,31 @@ class Manager(models.Model):
                 call(["cd %s; git clone %s" % (settings.MEOTEC_MANAGERS_ROOT, self.repository)], shell=True)
 
     def commands(self):
-        commands = {}
+        commands = []
         repo_name = self.get_repo_name()
         manager_path = os.path.join(settings.MEOTEC_MANAGERS_ROOT, repo_name)
         for command_name in find_commands(manager_path):
-            module = import_module('%s.%s.commands.%s' % (os.path.basename(settings.MEOTEC_MANAGERS_ROOT),
-                                                          repo_name, command_name))
+            module = import_module('%s.commands.%s' % (repo_name, command_name))
             for value in module.__dict__.values():
                 if isinstance(value, type) and issubclass(value, BaseCommand):
                     command = value()
                     if command.title:
-                        commands[command.title] = command
-        return sorted(commands.items())
+                        commands.append(command)
+        return commands
+
+    def commands_sorted(self):
+        return sorted(self.commands(), key=lambda obj: obj.title)
+
+    def command(self, name):
+        for i in self.commands():
+            if i.name == name:
+                return i
 
     def save(self, *args, **kwargs):
         if not self.name:
             self.name = self.get_repo_name()
         super(Manager, self).save(*args, **kwargs)
         self.update()
-
-    class Meta:
-        ordering = ('name',)
-
-
-class Command(models.Model):
-    name = models.CharField(_('display name'), max_length=50)
-    path = models.CharField(_('path'), max_length=255)
-    args = models.TextField(_('arguments'))
-
-    def __unicode__(self):
-        return self.name
 
     class Meta:
         ordering = ('name',)

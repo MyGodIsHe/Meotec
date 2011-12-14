@@ -1,8 +1,13 @@
+import urllib
+from django import forms
 from django.contrib import messages
+from django.core.urlresolvers import reverse
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.views.generic.simple import direct_to_template
 from django.utils.translation import ugettext_lazy as _
 from forms import ManagerForm, ServerForm, SiteForm
+from forms import BootstrapFormMixin
 from models import Manager, Server, Site
 
 
@@ -13,8 +18,57 @@ def home(request):
     })
 
 
-def action(request):
-    return direct_to_template(request, 'meotec/action.html', {
+def run_init(request, manager_id, command):
+    manager = get_object_or_404(Manager, pk=manager_id)
+    command = manager.command(command)
+    if not command:
+        raise Http404
+    form_class = type('Form',
+                      (forms.Form, BootstrapFormMixin),
+                      dict(command.args))
+    if request.GET:
+        form = form_class(request.GET)
+        if form.is_valid():
+            return HttpResponseRedirect("%s?%s" % (reverse('meotec:run', args=[manager.id, command.name]),
+                                                   request.META['QUERY_STRING']))
+    else:
+        form = form_class()
+    return direct_to_template(request, 'meotec/init_form.html', {
+        'path': request.path,
+        'title': command.title,
+        'form': form,
+    })
+
+
+def run(request, manager_id, command):
+    manager = get_object_or_404(Manager, pk=manager_id)
+    command = manager.command(command)
+    if not command:
+        raise Http404
+    servers, sites = request.GET.getlist('servers[]'), request.GET.getlist('sites[]')
+    form_class = type('Form',
+                      (forms.Form, BootstrapFormMixin),
+                      dict(command.args))
+    form = form_class(request.GET)
+    if not form.is_valid():
+        raise Http404
+    answers = {}
+    for server in Server.objects.filter(id__in=servers):
+        try:
+            answer = command.run(server, form.cleaned_data)
+        except Exception, e:
+            answer = e
+        answers[server]= (answer, {})
+    for site in Site.objects.filter(id__in=sites):
+        try:
+            answer = command.run(site, form.cleaned_data)
+        except Exception, e:
+            answer = e
+        if site.server not in answers:
+            answers[site.server] = (None, {})
+        answers[site.server][1][site] = answer
+    return direct_to_template(request, 'meotec/answer.html', {
+        'answers': answers,
     })
 
 

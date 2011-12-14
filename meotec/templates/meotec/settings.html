@@ -26,12 +26,12 @@
                 <h3>{% trans "Managers" %}
                     <a class="btn plus" href="{% url meotec:manager_add %}">+</a>
                     <a class="btn text success right" href="{% url meotec:manager_update %}">{% trans "Update" %}</a></h3>
-                <ul class="server-list">
+                <ul class="manager-list">
                 {% for manager in managers %}
                     <li><a href="{% url meotec:manager_edit manager.id %}">{{ manager }}</a>
                         <ul>
-                    {% for name, command in manager.commands %}
-                        <li><strong>{{ name }}</strong> - {{ command.help }}</li>
+                    {% for command in manager.commands_sorted %}
+                        <li><strong>{{ command.title }}</strong> - {{ command.help }}</li>
                     {% endfor %}
                     </ul>
                     </li>

@@ -1,4 +1,3 @@
-import os
 import sys
 from django.conf import settings
 import global_settings
@@ -13,4 +12,4 @@ for name, value in global_settings.__dict__.items():
 
 
 if settings.MEOTEC_MANAGERS_ROOT not in sys.path:
-    sys.path.append(os.path.dirname(settings.MEOTEC_MANAGERS_ROOT))
+    sys.path.append(settings.MEOTEC_MANAGERS_ROOT)

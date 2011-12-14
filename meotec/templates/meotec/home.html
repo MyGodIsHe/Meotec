@@ -21,20 +21,62 @@
                     else
                         server_list.removeAttr('checked');
                 });
+            $('.manager-list li > a.btn').click(function(e) {
+                var link = $(e.target);
+                $.get(link.attr('href'), function(response) {
+                    $('.manager-list').parent().html(response);
+                });
+                e.preventDefault();
+            });
+            $('form').live('submit', function(e) {
+                e.preventDefault();
+
+                var form = $(e.target),
+                    servers = [],
+                    sites = [];
+
+                $('input[name=server]:checked').each(function(i, obj) {
+                    servers.push($(obj).val());
+                });
+                $('input[name=site]:checked').each(function(i, obj) {
+                    sites.push($(obj).val());
+                });
+
+                var data = {
+                        'servers': servers,
+                        'sites': sites
+                    },
+                    dorm_data = form.serializeArray();
+                for (var i=0; i<dorm_data.length; i++) {
+                    data[dorm_data[i].name] = dorm_data[i].value;
+                }
+
+                $.ajax({
+                    url: form.attr('action'),
+                    data: data,
+                    success: function(data, textStatus) {
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        } else {
+                            $('.half .well').html(data);
+                        }
+                    }
+                });
+            })
         });
     </script>
 {% endblock %}
 
 {% block content %}
-    <form action="" method="post" class="content">
+    <div class="content">
         <div class="half">
             <h3><input type="checkbox" id="check-servers"/> {% trans "Servers" %}</h3>
             <ul class="server-list">
             {% for server in servers %}
-                <li><input type="checkbox"/> {{ server }}
+                <li><input type="checkbox" name="server" value="{{ server.id }}"/> {{ server }}
                     <ul>
                     {% for site in server.site_set.all %}
-                        <li><input type="checkbox"/> {{ site }}</li>
+                        <li><input type="checkbox" name="site" value="{{ site.id }}"/> {{ site }}</li>
                     {% endfor %}
                     </ul>
                 </li>
@@ -43,12 +85,12 @@
         </div>
         <div class="half">
             <div class="well">
-                <ul class="server-list">
+                <ul class="manager-list">
                 {% for manager in managers %}
                     <li>{{ manager }}
                         <ul>
-                    {% for name, command in manager.commands %}
-                        <li><a class="btn">{{ name }}</a> - {{ command.help }}</li>
+                    {% for command in manager.commands_sorted %}
+                        <li><a class="btn" href="{% url meotec:run_init manager.id command.name %}">{{ command.title }}</a> - {{ command.help }}</li>
                     {% endfor %}
                     </ul>
                     </li>
@@ -56,5 +98,5 @@
                 </ul>
             </div>
         </div>
-    </form>
+    </div>
 {% endblock %}

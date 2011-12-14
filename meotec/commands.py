@@ -11,6 +11,10 @@ class BaseCommand(object):
         """
         raise NotImplementedError()
 
+    @property
+    def name(self):
+        return self.__class__.__name__
+
 
 class SiteCommand(BaseCommand):
     pass

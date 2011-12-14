@@ -1,0 +1,10 @@
+{% load i18n %}
+<h3>{{ title }}</h3>
+<form action="{{ path }}" method="POST">
+    <fieldset>{% csrf_token %}
+        {{ form.as_bootstrap }}
+        <div class="actions">
+            <input type="submit" value="{% trans 'Run' %}" class="btn primary"/>
+        </div>
+    </fieldset>
+</form>
