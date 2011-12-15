@@ -8,6 +8,7 @@ from django.views.generic.simple import direct_to_template
 from django.utils.translation import ugettext_lazy as _
 from forms import ManagerForm, ServerForm, SiteForm
 from forms import BootstrapFormMixin
+from meotec.commands import ServerCommand, SiteCommand, BaseCommand
 from models import Manager, Server, Site
 
 
@@ -41,6 +42,32 @@ def run_init(request, manager_id, command):
 
 
 def run(request, manager_id, command):
+    def run_on_servers():
+        _answers = {}
+        for server in Server.objects.filter(id__in=servers):
+            try:
+                answer = command.run(server, form.cleaned_data)
+            except SystemExit:
+                answer = 'Error: System Exit'
+            except Exception, e:
+                answer = e
+            _answers[server]= (answer, {})
+        return _answers
+
+    def run_on_sites():
+        _answers = {}
+        for site in Site.objects.filter(id__in=sites):
+            try:
+                answer = command.run(site, form.cleaned_data)
+            except SystemExit:
+                answer = 'Error: System Exit'
+            except Exception, e:
+                answer = e
+            if site.server not in _answers:
+                _answers[site.server] = (None, {})
+            _answers[site.server][1][site] = answer
+        return _answers
+
     manager = get_object_or_404(Manager, pk=manager_id)
     command = manager.command(command)
     if not command:
@@ -53,20 +80,15 @@ def run(request, manager_id, command):
     if not form.is_valid():
         raise Http404
     answers = {}
-    for server in Server.objects.filter(id__in=servers):
-        try:
-            answer = command.run(server, form.cleaned_data)
-        except Exception, e:
-            answer = e
-        answers[server]= (answer, {})
-    for site in Site.objects.filter(id__in=sites):
-        try:
-            answer = command.run(site, form.cleaned_data)
-        except Exception, e:
-            answer = e
-        if site.server not in answers:
-            answers[site.server] = (None, {})
-        answers[site.server][1][site] = answer
+    if isinstance(command, ServerCommand):
+        answers.update(run_on_servers())
+    elif isinstance(command, SiteCommand):
+        answers.update(run_on_sites())
+    elif isinstance(command, BaseCommand):
+        answers.update(run_on_servers())
+        answers.update(run_on_sites())
+    else:
+        raise
     return direct_to_template(request, 'meotec/answer.html', {
         'answers': answers,
     })
