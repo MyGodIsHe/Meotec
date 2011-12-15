@@ -1,4 +1,4 @@
-from importlib import import_module
+from django.utils.importlib import import_module
 import os
 from subprocess import call
 from django.conf import settings
