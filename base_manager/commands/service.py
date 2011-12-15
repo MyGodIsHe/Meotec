@@ -20,7 +20,7 @@ class MySqlCommand(ServerCommand):
     }
 
     def run(self, server, kwargs):
-        with settings(host_string=server.hostname):
+        with settings(host_string=server.hostname, user='root'):
             return sudo("service mysql %s" % kwargs['command'])
 
 
@@ -38,7 +38,7 @@ class MemcachedCommand(ServerCommand):
     }
 
     def run(self, server, kwargs):
-        with settings(host_string=server.hostname):
+        with settings(host_string=server.hostname, user='root'):
             return sudo("service memcached %s" % kwargs['command'])
 
 
@@ -58,5 +58,5 @@ class NginxCommand(ServerCommand):
     }
 
     def run(self, server, kwargs):
-        with settings(host_string=server.hostname):
+        with settings(host_string=server.hostname, user='root'):
             return sudo("service nginx %s" % kwargs['command'])
