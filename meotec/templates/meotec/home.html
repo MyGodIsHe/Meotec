@@ -8,7 +8,8 @@
 {% block head %}
     <script type="text/javascript">
         $(function() {
-            var server_list = $('.server-list li :checkbox').change(function() {
+            var well = $('.half .well'),
+                server_list = $('.server-list li :checkbox').change(function() {
                     var box = $(this);
                     if (box.attr('checked'))
                         box.parent().find(':checkbox').attr('checked', 'checked');
@@ -23,8 +24,9 @@
                 });
             $('.manager-list li > a.btn').click(function(e) {
                 var link = $(e.target);
+                well.html('<div class="loading"/>');
                 $.get(link.attr('href'), function(response) {
-                    $('.manager-list').parent().html(response);
+                    well.html(response);
                 });
                 e.preventDefault();
             });
@@ -50,19 +52,17 @@
                 for (var i=0; i<dorm_data.length; i++) {
                     data[dorm_data[i].name] = dorm_data[i].value;
                 }
-
                 $.ajax({
                     url: form.attr('action'),
                     data: data,
-                    success: function(data, textStatus) {
-                        if (data.redirect) {
-                            window.location.href = data.redirect;
-                        } else {
-                            $('.half .well').html(data);
-                        }
+                    beforeSend: function() {
+                        well.html('<div class="loading"/>');
+                    },
+                    complete: function(jqXHR, textStatus) {
+                        well.html(jqXHR.responseText);
                     }
                 });
-            })
+            });
         });
     </script>
 {% endblock %}
