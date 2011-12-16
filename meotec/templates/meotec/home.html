@@ -95,7 +95,12 @@
                     </label>
                     <ul>
                     {% for site in server.site_set.all %}
-                        <li><input type="checkbox" name="site" value="{{ site.id }}"/> {{ site }}</li>
+                        <li>
+                            <label class="input-prepend">
+                                <span class="add-on"><input type="checkbox" name="site" value="{{ site.id }}"/></span>
+                                <span class="uneditable-input">{{ site }}</span>
+                            </label>
+                        </li>
                     {% endfor %}
                     </ul>
                 </li>
