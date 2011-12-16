@@ -45,6 +45,21 @@
     list-style: none;
     }
 
+label.input-prepend {
+    float: none;
+    width: auto;
+    text-align: left;
+    }
+
+    label.input-prepend > * {
+        cursor: pointer
+        }
+
+    label.input-prepend .uneditable-input {
+        display: inline-block;
+        width: auto;
+        }
+
 .loading {
     background: url(../imgs/loading.gif) repeat;
     width: 220px;

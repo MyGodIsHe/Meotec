@@ -11,17 +11,28 @@
             var well = $('.half .well'),
                 server_list = $('.server-list li :checkbox').change(function() {
                     var box = $(this);
-                    if (box.attr('checked'))
+                    if (box.attr('checked')) {
                         box.parent().find(':checkbox').attr('checked', 'checked');
-                    else
+                        box.parents('.add-on').addClass('active');
+                        box.parent().find('.add-on').addClass('active');
+                    } else {
                         box.parent().find(':checkbox').removeAttr('checked');
+                        box.parents('.add-on').removeClass('active');
+                        box.parent().find('.add-on').removeClass('active');
+                    }
                 }),
                 check_servers = $('#check-servers').change(function() {
-                    if (check_servers.attr('checked'))
+                    if (check_servers.attr('checked')) {
                         server_list.attr('checked', 'checked');
-                    else
+                        check_servers.parents('.add-on').addClass('active');
+                        $('.server-list li .add-on').addClass('active');
+                    } else {
                         server_list.removeAttr('checked');
+                        check_servers.parents('.add-on').removeClass('active');
+                        $('.server-list li .add-on').removeClass('active');
+                    }
                 });
+
             $('.manager-list li > a.btn').click(function(e) {
                 var link = $(e.target);
                 well.html('<div class="loading"/>');
@@ -30,6 +41,7 @@
                 });
                 e.preventDefault();
             });
+
             $('form').live('submit', function(e) {
                 e.preventDefault();
 
@@ -70,10 +82,17 @@
 {% block content %}
     <div class="content">
         <div class="half">
-            <h3><input type="checkbox" id="check-servers"/> {% trans "Servers" %}</h3>
+            <label class="input-prepend">
+                <span class="add-on"><input type="checkbox" id="check-servers"/></span>
+                <span class="uneditable-input">{% trans "Servers" %}</span>
+            </label>
             <ul class="server-list">
             {% for server in servers %}
-                <li><input type="checkbox" name="server" value="{{ server.id }}"/> {{ server }}
+                <li>
+                    <label class="input-prepend">
+                        <span class="add-on"><input type="checkbox" name="server" value="{{ server.id }}"/></span>
+                        <span class="uneditable-input">{{ server }}</span>
+                    </label>
                     <ul>
                     {% for site in server.site_set.all %}
                         <li><input type="checkbox" name="site" value="{{ site.id }}"/> {{ site }}</li>
