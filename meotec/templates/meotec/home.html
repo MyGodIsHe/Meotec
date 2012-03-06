@@ -9,7 +9,7 @@
     <script type="text/javascript">
         $(function() {
             var well = $('.half .well'),
-                server_list = $('.server-list li :checkbox').change(function() {
+                node_list = $('.node-list li :checkbox').change(function() {
                     var box = $(this);
                     if (box.attr('checked')) {
                         box.parent().find(':checkbox').attr('checked', 'checked');
@@ -19,17 +19,6 @@
                         box.parent().find(':checkbox').removeAttr('checked');
                         box.parents('.add-on').removeClass('active');
                         box.parent().find('.add-on').removeClass('active');
-                    }
-                }),
-                check_servers = $('#check-servers').change(function() {
-                    if (check_servers.attr('checked')) {
-                        server_list.attr('checked', 'checked');
-                        check_servers.parents('.add-on').addClass('active');
-                        $('.server-list li .add-on').addClass('active');
-                    } else {
-                        server_list.removeAttr('checked');
-                        check_servers.parents('.add-on').removeClass('active');
-                        $('.server-list li .add-on').removeClass('active');
                     }
                 });
 
@@ -46,19 +35,14 @@
                 e.preventDefault();
 
                 var form = $(e.target),
-                    servers = [],
-                    sites = [];
+                    nodes = [];
 
-                $('input[name=server]:checked').each(function(i, obj) {
-                    servers.push($(obj).val());
-                });
-                $('input[name=site]:checked').each(function(i, obj) {
-                    sites.push($(obj).val());
+                $('input[name=nodes]:checked').each(function(i, obj) {
+                    nodes.push($(obj).val());
                 });
 
                 var data = {
-                        'servers': servers,
-                        'sites': sites
+                        'nodes': nodes
                     },
                     dorm_data = form.serializeArray();
                 for (var i=0; i<dorm_data.length; i++) {
@@ -82,9 +66,9 @@
 {% block content %}
     <div class="content">
         <div class="half">
-            <ul class="server-list">
+            <ul class="node-list">
             {% recursetree nodes %}
-            <li>
+            <li class="node">
                 <label class="input-prepend">
                     <span class="add-on"><input type="checkbox" name="nodes" value="{{ node.id }}"/></span>
                     <span class="uneditable-input">{{ node }}</span>

@@ -46,6 +46,11 @@
             padding-top: 5px;
             }
 
+        .node-list li.node .input-prepend,
+        .node-list li.node .uneditable-input {
+            margin-bottom: 0;
+            }
+
 label.input-prepend {
     float: none;
     width: auto;
