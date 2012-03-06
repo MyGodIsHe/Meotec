@@ -9,12 +9,12 @@ from django.utils.translation import ugettext as _
 from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel
 from base import entities_by_repo, commands_by_repo
-from validators import regex_repo_name
+from validators import regex_repo_name, validate_git
 
 
 class Manager(models.Model):
-    name = models.CharField(_('display name'), max_length=50)
-    repository = models.CharField(_('display name'), max_length=255)
+    name = models.CharField(_('Display name'), max_length=50)
+    repository = models.CharField(_('Repository'), max_length=255, validators=[validate_git], help_text=_('git or path'))
 
     def __unicode__(self):
         return self.name
@@ -62,7 +62,7 @@ class Manager(models.Model):
 
 
 class Node(MPTTModel):
-    name = models.CharField(_('display name'), max_length=50)
+    name = models.CharField(_('Display name'), max_length=50)
     content_type = models.ForeignKey(ContentType, blank=True, null=True)
     object_id = models.PositiveIntegerField(blank=True, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')

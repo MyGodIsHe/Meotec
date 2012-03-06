@@ -4,7 +4,6 @@ from django.utils.encoding import force_unicode
 from django.utils.html import conditional_escape
 from django.utils.translation import ugettext_lazy as _
 from models import Manager
-from validators import validate_git
 
 
 def customize(template, rules=None, extra_context=None):
@@ -57,16 +56,13 @@ class BootstrapFormMixin(object):
 
 
 class ManagerForm(forms.ModelForm, BootstrapFormMixin):
-    name = forms.CharField(label=_('display name'), max_length=50)
-    repository = forms.CharField(label=_('repository'), max_length=255, validators=[validate_git], help_text=_('git or path'))
-
     class Meta:
         model = Manager
 
 
 def form_factory(Model):
     class Form(forms.ModelForm, BootstrapFormMixin):
-        name = forms.CharField(label=_('display name'), max_length=50)
+        name = forms.CharField(label=_('Display name'), max_length=50)
         class Meta:
             model = Model
             exclude = ('content_type', 'object_id', 'content_object', 'parent')

@@ -4,7 +4,7 @@ from meotec.base import EntityModel
 
 
 class Server(EntityModel):
-    hostname = models.CharField(_('hostname'), max_length=255)
+    hostname = models.CharField(_('Hostname'), max_length=255)
 
     class EntityMeta:
         possible_parents = (EntityModel,)
@@ -12,8 +12,8 @@ class Server(EntityModel):
 
 
 class Site(EntityModel):
-    domain = models.CharField(_('domain name'), max_length=255)
-    repository = models.CharField(_('repository'), max_length=255)
+    domain = models.CharField(_('Domain name'), max_length=255)
+    repository = models.CharField(_('Repository'), max_length=255)
 
     class EntityMeta:
         possible_parents = (Server,)

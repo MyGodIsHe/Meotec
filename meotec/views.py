@@ -133,6 +133,8 @@ def node_add(request, id, class_path):
 
 def node_edit(request, id):
     node = get_object_or_404(Node, pk=id)
+    if node.is_root_node():
+        return HttpResponseBadRequest()
     NodeForm = form_factory(node.content_object.__class__)
     if request.POST:
         form = NodeForm(request.POST, initial={ 'name': node.name }, instance=node.content_object)
@@ -151,8 +153,16 @@ def node_edit(request, id):
 
 
 def node_del(request, id):
-    obj = get_object_or_404(Node, pk=id)
-    name = unicode(obj)
-    obj.delete()
-    messages.success(request, _(u'%s deleted successfully' % name))
+    node = get_object_or_404(Node, pk=id)
+    if node.is_root_node():
+        names = []
+        for n in node.get_children():
+            names.append(unicode(n))
+            n.delete()
+        if names:
+            messages.success(request, _(u'%s deleted successfully' % ', '.join(names)))
+    else:
+        name = unicode(node)
+        node.delete()
+        messages.success(request, _(u'%s deleted successfully' % name))
     return redirect('meotec:settings')

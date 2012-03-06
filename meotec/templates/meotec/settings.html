@@ -17,15 +17,17 @@
                             <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
+                            {% if not node.is_root_node %}
                             <li><a href="{% url meotec:node_edit node.id %}"><i class="icon-pencil"></i> Edit</a></li>
+                            <li class="divider"></li>
+                            {% endif %}
                             {% if node.possible_children %}
-                                <li class="divider"></li>
                                 {% for Entity in node.possible_children %}
                                     <li><a href="{% url meotec:node_add node.id Entity.class_path %}"><i class="icon-plus"></i> {{ Entity|class_name }}</a></li>
                                 {% endfor %}
-                            {% endif %}
                             <li class="divider"></li>
-                            <li><a href="{% url meotec:node_del node.id %}"><i class="icon-trash"></i> Delete</a></li>
+                            {% endif %}
+                            <li><a href="{% url meotec:node_del node.id %}"><i class="icon-trash"></i> {% if node.is_root_node %}{% trans "Clear" %}{% else %}{% trans "Delete" %}{% endif %}</a></li>
                         </ul>
                     </div>
                     {% if not node.is_leaf_node %}
