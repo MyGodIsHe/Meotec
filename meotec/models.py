@@ -40,7 +40,7 @@ class Manager(models.Model):
 
     def command(self, name):
         for i in self.commands():
-            if i.name == name:
+            if i.__name__ == name:
                 return i
 
     def entities(self):
