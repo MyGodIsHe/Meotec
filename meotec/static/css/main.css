@@ -33,17 +33,18 @@
     padding: 0 8px;
     }
 
-.btn.text {
-    font-size: 13px;
-    padding: 5px 14px 6px 14px;
+.node-list {
+    margin: 0;
     }
 
-.server-list li,
-.manager-list li {
-    font-size: 18px;
-    padding: 5px 0;
-    list-style: none;
-    }
+    .node-list li.node {
+        list-style: none;
+        padding-bottom: 5px;
+        }
+
+        .node-list li.node > ul {
+            padding-top: 5px;
+            }
 
 label.input-prepend {
     float: none;
@@ -61,7 +62,7 @@ label.input-prepend {
         }
 
 .loading {
-    background: url(../imgs/loading.gif) repeat;
+    background: url(../img/loading.gif) repeat;
     width: 220px;
     height: 19px;
     margin: auto;

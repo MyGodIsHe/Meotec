@@ -1,20 +1,18 @@
-import urllib
 from django import forms
 from django.contrib import messages
 from django.core.urlresolvers import reverse
-from django.http import Http404, HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponseBadRequest
 from django.shortcuts import redirect, get_object_or_404
 from django.views.generic.simple import direct_to_template
 from django.utils.translation import ugettext_lazy as _
-from forms import ManagerForm, ServerForm, SiteForm
-from forms import BootstrapFormMixin
-from meotec.commands import ServerCommand, SiteCommand, BaseCommand
-from models import Manager, Server, Site
+from forms import ManagerForm, form_factory,  BootstrapFormMixin
+from meotec.base import BaseCommand, get_class_by_path
+from models import Manager, Node
 
 
 def home(request):
     return direct_to_template(request, 'meotec/home.html', {
-        'servers': Server.objects.all(),
+        'nodes': Node.tree.all(),
         'managers': Manager.objects.all(),
     })
 
@@ -23,7 +21,7 @@ def run_init(request, manager_id, command):
     manager = get_object_or_404(Manager, pk=manager_id)
     command = manager.command(command)
     if not command:
-        raise Http404
+        return HttpResponseNotFound()
     form_class = type('Form',
                       (forms.Form, BootstrapFormMixin),
                       dict(command.args))
@@ -42,53 +40,23 @@ def run_init(request, manager_id, command):
 
 
 def run(request, manager_id, command):
-    def run_on_servers():
-        _answers = {}
-        for server in Server.objects.filter(id__in=servers):
-            try:
-                answer = command.run(server, form.cleaned_data)
-            except SystemExit:
-                answer = 'Error: System Exit'
-            except Exception, e:
-                answer = e
-            _answers[server]= (answer, {})
-        return _answers
-
-    def run_on_sites():
-        _answers = {}
-        for site in Site.objects.filter(id__in=sites):
-            try:
-                answer = command.run(site, form.cleaned_data)
-            except SystemExit:
-                answer = 'Error: System Exit'
-            except Exception, e:
-                answer = e
-            if site.server not in _answers:
-                _answers[site.server] = (None, {})
-            _answers[site.server][1][site] = answer
-        return _answers
-
     manager = get_object_or_404(Manager, pk=manager_id)
     command = manager.command(command)
     if not command:
-        raise Http404
-    servers, sites = request.GET.getlist('servers[]'), request.GET.getlist('sites[]')
+        return HttpResponseNotFound()
+    nodes = request.GET.getlist('nodes[]')
     form_class = type('Form',
                       (forms.Form, BootstrapFormMixin),
                       dict(command.args))
     form = form_class(request.GET)
     if not form.is_valid():
-        raise Http404
+        return HttpResponseBadRequest()
     answers = {}
-    if isinstance(command, ServerCommand):
-        answers.update(run_on_servers())
-    elif isinstance(command, SiteCommand):
-        answers.update(run_on_sites())
-    elif isinstance(command, BaseCommand):
+    if isinstance(command, BaseCommand):
         answers.update(run_on_servers())
         answers.update(run_on_sites())
     else:
-        raise
+        return HttpResponseBadRequest()
     return direct_to_template(request, 'meotec/answer.html', {
         'answers': answers,
     })
@@ -96,17 +64,18 @@ def run(request, manager_id, command):
 
 def settings(request):
     return direct_to_template(request, 'meotec/settings.html', {
-        'servers': Server.objects.all(),
+        'nodes': Node.tree.all(),
         'managers': Manager.objects.all(),
     })
 
 
 def manager_add(request):
     if request.POST:
+        print 0
         form = ManagerForm(request.POST)
         if form.is_valid():
             obj = form.save()
-            messages.success(request, _('%s manager is added' % obj))
+            messages.success(request, _(u'%s manager is added' % obj))
             return redirect('meotec:settings')
     else:
         form = ManagerForm()
@@ -122,7 +91,7 @@ def manager_edit(request, id):
         form = ManagerForm(request.POST, instance=manager)
         if form.is_valid():
             obj = form.save()
-            messages.success(request, _('%s manager changed successfully' % obj))
+            messages.success(request, _(u'%s manager changed successfully' % obj))
             return redirect('meotec:settings')
     else:
         form = ManagerForm(instance=manager)
@@ -135,69 +104,55 @@ def manager_edit(request, id):
 def manager_update(request):
     for manager in Manager.objects.all():
         manager.update()
-    messages.success(request, _('Update is successful'))
+    messages.success(request, _(u'Update is successful'))
     return redirect('meotec:settings')
 
 
-def server_add(request):
+def node_add(request, id, class_path):
+    Entity = get_class_by_path(class_path)
+    parent = get_object_or_404(Node, pk=id)
+    NodeForm = form_factory(Entity)
     if request.POST:
-        form = ServerForm(request.POST)
+        form = NodeForm(request.POST)
         if form.is_valid():
             obj = form.save()
-            messages.success(request, _('%s server is added' % obj))
+            Node(
+                name=form.cleaned_data['name'],
+                parent=parent,
+                content_object=obj,
+            ).save()
+            messages.success(request, _(u'%s is added' % obj))
             return redirect('meotec:settings')
     else:
-        form = ServerForm()
+        form = NodeForm()
     return direct_to_template(request, 'meotec/simple_form.html', {
-        'title': _('Server Add'),
+        'title': _('Node Add'),
         'form': form,
     })
 
 
-def server_edit(request, id):
-    server = get_object_or_404(Server, pk=id)
+def node_edit(request, id):
+    node = get_object_or_404(Node, pk=id)
+    NodeForm = form_factory(node.content_object.__class__)
     if request.POST:
-        form = ServerForm(request.POST, instance=server)
+        form = NodeForm(request.POST, initial={ 'name': node.name }, instance=node.content_object)
         if form.is_valid():
             obj = form.save()
-            messages.success(request, _('%s server changed successfully' % obj))
+            node.name = form.cleaned_data['name']
+            node.save()
+            messages.success(request, _(u'%s changed successfully' % obj))
             return redirect('meotec:settings')
     else:
-        form = ServerForm(instance=server)
+        form = NodeForm(initial={ 'name': node.name }, instance=node.content_object)
     return direct_to_template(request, 'meotec/simple_form.html', {
-        'title': _('Server Edit'),
+        'title': _('Node Edit'),
         'form': form,
     })
 
 
-def site_add(request, server_id):
-    server = get_object_or_404(Server, pk=server_id)
-    if request.POST:
-        form = SiteForm(request.POST)
-        if form.is_valid():
-            form.instance.server = server
-            obj = form.save()
-            messages.success(request, _('%s site is added' % obj))
-            return redirect('meotec:settings')
-    else:
-        form = SiteForm()
-    return direct_to_template(request, 'meotec/simple_form.html', {
-        'title': _('Add site to the server %s' % server),
-        'form': form,
-    })
-
-
-def site_edit(request, server_id, id):
-    site = get_object_or_404(Site, pk=id)
-    if request.POST:
-        form = SiteForm(request.POST, instance=site)
-        if form.is_valid():
-            obj = form.save()
-            messages.success(request, _('%s site changed successfully' % obj))
-            return redirect('meotec:settings')
-    else:
-        form = SiteForm(instance=site)
-    return direct_to_template(request, 'meotec/simple_form.html', {
-        'title': _('Site Edit %s' % site),
-        'form': form,
-    })
+def node_del(request, id):
+    obj = get_object_or_404(Node, pk=id)
+    name = unicode(obj)
+    obj.delete()
+    messages.success(request, _(u'%s deleted successfully' % name))
+    return redirect('meotec:settings')

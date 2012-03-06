@@ -1,11 +1,11 @@
 from django import forms
 from fabric.context_managers import settings
 from fabric.operations import sudo
-from meotec.commands import ServerCommand
+from meotec.base import BaseCommand
 from django.utils.translation import ugettext_lazy as _
 
 
-class MySqlCommand(ServerCommand):
+class MySqlCommand(BaseCommand):
     title= _('MySql')
     help = _("V init script")
     args = {
@@ -24,7 +24,7 @@ class MySqlCommand(ServerCommand):
             return sudo("service mysql %s" % kwargs['command'])
 
 
-class MemcachedCommand(ServerCommand):
+class MemcachedCommand(BaseCommand):
     title= _('Memcached')
     help = _("V init script")
     args = {
@@ -42,7 +42,7 @@ class MemcachedCommand(ServerCommand):
             return sudo("service memcached %s" % kwargs['command'])
 
 
-class NginxCommand(ServerCommand):
+class NginxCommand(BaseCommand):
     title= _('Nginx')
     help = _("V init script")
     args = {

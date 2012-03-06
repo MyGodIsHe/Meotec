@@ -1,6 +1,6 @@
 {% extends 'meotec/base.html' %}
 
-{% load i18n %}
+{% load i18n mptt_tags meotec_tags %}
 
 {% block title %}{% trans "Settings" %}{% endblock %}
 {% block h1 %}{% trans "Settings" %}{% endblock %}
@@ -8,32 +8,59 @@
 {% block content %}
     <form action="" method="post" class="content">
         <div class="half">
-            <h3>{% trans "Servers" %} <a class="btn plus" href="{% url meotec:server_add %}">+</a></h3>
-            <ul class="server-list">
-            {% for server in servers %}
-                <li><a href="{% url meotec:server_edit server.id %}">{{ server }}</a> <a class="btn plus" href="{% url meotec:site_add server.id %}">+</a>
-                    <ul>
-                    {% for site in server.site_set.all %}
-                        <li><a href="{% url meotec:site_edit server.id site.id %}">{{ site }}</a></li>
-                    {% endfor %}
-                    </ul>
+            <ul class="node-list">
+            {% recursetree nodes %}
+                <li class="node">
+                    <div class="btn-group">
+                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                            {{ node }}
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url meotec:node_edit node.id %}"><i class="icon-pencil"></i> Edit</a></li>
+                            {% if node.possible_children %}
+                                <li class="divider"></li>
+                                {% for Entity in node.possible_children %}
+                                    <li><a href="{% url meotec:node_add node.id Entity.class_path %}"><i class="icon-plus"></i> {{ Entity|class_name }}</a></li>
+                                {% endfor %}
+                            {% endif %}
+                            <li class="divider"></li>
+                            <li><a href="{% url meotec:node_del node.id %}"><i class="icon-trash"></i> Delete</a></li>
+                        </ul>
+                    </div>
+                    {% if not node.is_leaf_node %}
+                        <ul>
+                            {{ children }}
+                        </ul>
+                    {% endif %}
                 </li>
-            {% endfor %}
+            {% endrecursetree %}
             </ul>
         </div>
         <div class="half">
             <div class="line-h">
                 <h3>{% trans "Managers" %}
-                    <a class="btn plus" href="{% url meotec:manager_add %}">+</a>
-                    <a class="btn text success right" href="{% url meotec:manager_update %}">{% trans "Update" %}</a></h3>
+                    <a class="btn" href="{% url meotec:manager_add %}"><i class="icon-plus"></i> {% trans "Manager" %}</a>
+                    <a class="btn text btn-success right" href="{% url meotec:manager_update %}"><i class="icon-repeat icon-white"></i> {% trans "Update" %}</a></h3>
                 <ul class="manager-list">
                 {% for manager in managers %}
                     <li><a href="{% url meotec:manager_edit manager.id %}">{{ manager }}</a>
                         <ul>
-                    {% for command in manager.commands_sorted %}
-                        <li><strong>{{ command.title }}</strong> - {{ command.help }}</li>
-                    {% endfor %}
-                    </ul>
+                            <li>{% trans "Entities" %}
+                                <ul>
+                                    {% for entity in manager.entities_sorted %}
+                                    <li><strong>{{ entity|class_name }}</strong></li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            <li>{% trans "Commands" %}
+                                <ul>
+                                {% for command in manager.commands_sorted %}
+                                    <li><strong>{{ command.title }}</strong> - {{ command.help }}</li>
+                                {% endfor %}
+                                </ul>
+                            </li>
+                        </ul>
                     </li>
                 {% endfor %}
                 </ul>

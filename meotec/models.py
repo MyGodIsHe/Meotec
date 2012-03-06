@@ -1,17 +1,20 @@
-from django.utils.importlib import import_module
+from itertools import chain
 import os
 from subprocess import call
 from django.conf import settings
-from django.core.management import find_commands
+from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
-from meotec.commands import BaseCommand
-from validators import regex_repo_name, validate_git
+from django.utils.translation import ugettext as _
+from mptt.fields import TreeForeignKey
+from mptt.models import MPTTModel
+from base import entities_by_repo, commands_by_repo
+from validators import regex_repo_name
 
 
 class Manager(models.Model):
-    name = models.CharField(_('display name'), max_length=50, blank=True, null=True)
-    repository = models.CharField(_('repository'), max_length=255, validators=[validate_git], help_text=_('only git'))
+    name = models.CharField(_('display name'), max_length=50)
+    repository = models.CharField(_('display name'), max_length=255)
 
     def __unicode__(self):
         return self.name
@@ -30,17 +33,7 @@ class Manager(models.Model):
                 call(["cd %s; git clone %s" % (settings.MEOTEC_MANAGERS_ROOT, self.repository)], shell=True)
 
     def commands(self):
-        commands = []
-        repo_name = self.get_repo_name()
-        manager_path = os.path.join(settings.MEOTEC_MANAGERS_ROOT, repo_name)
-        for command_name in find_commands(manager_path):
-            module = import_module('%s.commands.%s' % (repo_name, command_name))
-            for value in module.__dict__.values():
-                if isinstance(value, type) and issubclass(value, BaseCommand):
-                    command = value()
-                    if command.title:
-                        commands.append(command)
-        return commands
+        return commands_by_repo(self.get_repo_name())
 
     def commands_sorted(self):
         return sorted(self.commands(), key=lambda obj: obj.title)
@@ -50,35 +43,47 @@ class Manager(models.Model):
             if i.name == name:
                 return i
 
+    def entities(self):
+        return entities_by_repo(self.get_repo_name())
+
+    def entities_sorted(self):
+        return sorted(self.entities(), key=lambda obj: obj.__class__)
+
+    def entity(self, name):
+        for i in self.entities():
+            if i.name == name:
+                return i
+
     def save(self, *args, **kwargs):
         if not self.name:
             self.name = self.get_repo_name()
         super(Manager, self).save(*args, **kwargs)
         self.update()
 
-    class Meta:
-        ordering = ('name',)
 
-
-class Server(models.Model):
+class Node(MPTTModel):
     name = models.CharField(_('display name'), max_length=50)
-    hostname = models.CharField(_('hostname'), max_length=255)
+    content_type = models.ForeignKey(ContentType, blank=True, null=True)
+    object_id = models.PositiveIntegerField(blank=True, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
 
     def __unicode__(self):
         return self.name
 
-    class Meta:
-        ordering = ('name',)
+    def possible_children(self):
+        from base import EntityModel
+        if self.content_object:
+            node_class = self.content_object.__class__
+            children = node_class._entity_meta.possible_children
+        else:
+            node_class = EntityModel
+            children = []
+        for cls in chain(*[m.entities()
+                              for m in Manager.objects.all()]):
+            if cls not in children and node_class in cls._entity_meta.possible_parents:
+                children.append(cls)
+        return children
 
-
-class Site(models.Model):
-    domain = models.CharField(_('domain name'), max_length=100)
-    name = models.CharField(_('display name'), max_length=50)
-    repository = models.CharField(_('repository'), max_length=255)
-    server = models.ForeignKey(Server, verbose_name=_('server'))
-
-    def __unicode__(self):
-        return self.name
-
-    class Meta:
-        ordering = ('name',)
+    class MPTTMeta:
+        order_insertion_by = ['name']

@@ -1,6 +1,6 @@
 {% extends 'meotec/base.html' %}
 
-{% load i18n %}
+{% load i18n mptt_tags %}
 
 {% block title %}{% trans "Dashboard" %}{% endblock %}
 {% block h1 %}{% trans "Dashboard" %}{% endblock %}
@@ -82,29 +82,20 @@
 {% block content %}
     <div class="content">
         <div class="half">
-            <label class="input-prepend">
-                <span class="add-on"><input type="checkbox" id="check-servers"/></span>
-                <span class="uneditable-input">{% trans "Servers" %}</span>
-            </label>
             <ul class="server-list">
-            {% for server in servers %}
-                <li>
-                    <label class="input-prepend">
-                        <span class="add-on"><input type="checkbox" name="server" value="{{ server.id }}"/></span>
-                        <span class="uneditable-input">{{ server }}</span>
-                    </label>
-                    <ul>
-                    {% for site in server.site_set.all %}
-                        <li>
-                            <label class="input-prepend">
-                                <span class="add-on"><input type="checkbox" name="site" value="{{ site.id }}"/></span>
-                                <span class="uneditable-input">{{ site }}</span>
-                            </label>
-                        </li>
-                    {% endfor %}
-                    </ul>
-                </li>
-            {% endfor %}
+            {% recursetree nodes %}
+            <li>
+                <label class="input-prepend">
+                    <span class="add-on"><input type="checkbox" name="nodes" value="{{ node.id }}"/></span>
+                    <span class="uneditable-input">{{ node }}</span>
+                </label>
+                {% if not node.is_leaf_node %}
+                <ul>
+                    {{ children }}
+                </ul>
+                {% endif %}
+            </li>
+            {% endrecursetree %}
             </ul>
         </div>
         <div class="half">

@@ -8,19 +8,19 @@
 {% endif %}
 
 {% for field in fields %}
-    <div class="clearfix{% if field.errors %} error{% endif %}">
-        {{ field.label_tag }}
-        <div class="input">
+    <div class="control-group{% if field.errors %} error{% endif %}">
+        <label class="control-label" for="{{ field.auto_id }}">{{ field.label }}</label>
+        <div class="controls">
             {{ field }}
-            {% if field.help_text %}
-                <span class="help-inline">{{ field.help_text }}</span>
-            {% endif %}
             {% if field.errors %}
-                <span class="help-block">
+                <span class="help-inline">
                 {% for erorr in field.errors %}
-                    {{ erorr }}<br/>
+                    {{ erorr }}
                 {% endfor %}
                 </span>
+            {% endif %}
+            {% if field.help_text %}
+            <p class="help-block">{{ field.help_text }}</p>
             {% endif %}
         </div>
     </div>
