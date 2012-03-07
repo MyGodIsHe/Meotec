@@ -1,6 +1,6 @@
 {% extends 'meotec/base.html' %}
 
-{% load i18n mptt_tags %}
+{% load i18n mptt_tags meotec_tags %}
 
 {% block title %}{% trans "Dashboard" %}{% endblock %}
 {% block h1 %}{% trans "Dashboard" %}{% endblock %}
@@ -8,22 +8,23 @@
 {% block head %}
     <script type="text/javascript">
         $(function() {
-            var well = $('.half .well'),
+            var well = $('.half .well > div'),
                 node_list = $('.node-list li :checkbox').change(function() {
                     var box = $(this);
                     if (box.attr('checked')) {
-                        box.parent().find(':checkbox').attr('checked', 'checked');
+                        box.parents('.node:first').find(':checkbox').attr('checked', 'checked');
                         box.parents('.add-on').addClass('active');
-                        box.parent().find('.add-on').addClass('active');
+                        box.parents('.node:first').find('.add-on').addClass('active');
                     } else {
-                        box.parent().find(':checkbox').removeAttr('checked');
+                        box.parents('.node:first').find(':checkbox').removeAttr('checked');
                         box.parents('.add-on').removeClass('active');
-                        box.parent().find('.add-on').removeClass('active');
+                        box.parents('.node:first').find('.add-on').removeClass('active');
                     }
                 });
 
-            $('.manager-list li > a.btn').click(function(e) {
+            $('.manager-list a').click(function(e) {
                 var link = $(e.target);
+                $('.manager-list').hide();
                 well.html('<div class="loading"/>');
                 $.get(link.attr('href'), function(response) {
                     well.html(response);
@@ -59,6 +60,18 @@
                     }
                 });
             });
+
+            $('form').live('reset', function(e) {
+                well.html('');
+                $('.manager-list').show();
+                e.preventDefault();
+            });
+
+            $('.answers .back').live('click', function(e) {
+                well.html('');
+                $('.manager-list').show();
+                e.preventDefault();
+            });
         });
     </script>
 {% endblock %}
@@ -66,6 +79,7 @@
 {% block content %}
     <div class="content">
         <div class="half">
+            <h3>{% trans "Objects" %}</h3>
             <ul class="node-list">
             {% recursetree nodes %}
             <li class="node">
@@ -83,18 +97,17 @@
             </ul>
         </div>
         <div class="half">
-            <div class="well">
-                <ul class="manager-list">
-                {% for manager in managers %}
-                    <li>{{ manager }}
-                        <ul>
-                    {% for command in manager.commands_sorted %}
-                        <li><a class="btn" href="{% url meotec:run_init manager.id command.name %}">{{ command.title }}</a> - {{ command.help }}</li>
+            <h3>{% trans "Commands" %}</h3>
+            <div class="well" style="padding: 8px 0;">
+                <ul class="manager-list nav nav-list">
+                    {% for manager in managers %}
+                    <li class="nav-header">{{ manager }}</li>
+                        {% for command in manager.commands_sorted %}
+                        <li><a href="{% url meotec:run_init manager.id command|class_name %}"><i class=" icon-play-circle"></i> {{ command.title }} - {{ command.help }}</a></li>
+                        {% endfor %}
                     {% endfor %}
-                    </ul>
-                    </li>
-                {% endfor %}
                 </ul>
+                <div></div>
             </div>
         </div>
     </div>

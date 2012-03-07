@@ -1,13 +1,9 @@
-{% load i18n %}<ul>
-{% for server, answer in answers.items %}
-    <li>{{ server }}{% if answer.0 %} - {{ answer.0 }}{% endif %}
-        {% if answer.1 %}
-            <ul>
-            {% for site, answer in answer.1.items %}
-                <li>{{ site }}{% if answer %} - {{ answer }}{% endif %}</li>
-            {% endfor %}
-            </ul>
-        {% endif %}
-    </li>
+{% load i18n mptt_tags %}
+<div class="answers">
+{% for node, tree in nodes|tree_info %}
+{% if tree.new_level %}<ul><li>{% else %}</li><li>{% endif %}
+<span class="label label-info">{{ node }}</span>{% if node.answer %} - {{ node.answer }}{% endif %}
+{% for level in tree.closed_levels %}</li></ul>{% endfor %}
 {% endfor %}
-</ul>
+    <a href="#" class="btn back"><i class="icon-backward"></i> {% trans "Back" %}</a>
+</div>

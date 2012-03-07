@@ -51,7 +51,7 @@ class Manager(models.Model):
 
     def entity(self, name):
         for i in self.entities():
-            if i.name == name:
+            if i.__name__ == name:
                 return i
 
     def save(self, *args, **kwargs):

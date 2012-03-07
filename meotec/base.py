@@ -10,18 +10,20 @@ from django.utils.importlib import import_module
 class BaseCommand(object):
     title = ''
     args = {}
+    valid_entities = ()
 
-    def run(self, *args, **kwargs):
+    @classmethod
+    def can_run(cls, node):
+        return node.__class__ in cls.valid_entities
+
+    @classmethod
+    def run(cls, *args, **kwargs):
         """
         The actual logic of the command. Subclasses must implement
         this method.
 
         """
         raise NotImplementedError()
-
-    @property
-    def name(self):
-        return self.__class__.__name__
 
 
 class EntityOptions(object):

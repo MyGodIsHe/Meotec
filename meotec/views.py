@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import messages
+from django.core import management
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponseBadRequest
 from django.shortcuts import redirect, get_object_or_404
@@ -28,7 +29,7 @@ def run_init(request, manager_id, command):
     if request.GET:
         form = form_class(request.GET)
         if form.is_valid():
-            return HttpResponseRedirect("%s?%s" % (reverse('meotec:run', args=[manager.id, command.name]),
+            return HttpResponseRedirect("%s?%s" % (reverse('meotec:run', args=[manager.id, command.__name__]),
                                                    request.META['QUERY_STRING']))
     else:
         form = form_class()
@@ -40,25 +41,34 @@ def run_init(request, manager_id, command):
 
 
 def run(request, manager_id, command):
+    nodes = request.GET.getlist('nodes[]')
     manager = get_object_or_404(Manager, pk=manager_id)
     command = manager.command(command)
-    if not command:
+    if not command or not nodes:
         return HttpResponseNotFound()
-    nodes = request.GET.getlist('nodes[]')
     form_class = type('Form',
                       (forms.Form, BootstrapFormMixin),
                       dict(command.args))
     form = form_class(request.GET)
     if not form.is_valid():
         return HttpResponseBadRequest()
-    answers = {}
-    if isinstance(command, BaseCommand):
-        answers.update(run_on_servers())
-        answers.update(run_on_sites())
-    else:
+    if not issubclass(command, BaseCommand):
         return HttpResponseBadRequest()
+    result_nodes = Node.tree.filter(id__in=nodes).all()
+    for node in result_nodes:
+        answer = None
+        if command.can_run(node.content_object):
+            try:
+                answer = command.run(node.content_object, form.cleaned_data)
+            except SystemExit:
+                answer = 'Error: System Exit'
+            except Exception, e:
+                answer = e
+        setattr(node, 'answer', answer)
+    for i in result_nodes:
+        print '>>>', i.answer
     return direct_to_template(request, 'meotec/answer.html', {
-        'answers': answers,
+        'nodes': result_nodes,
     })
 
 
@@ -104,6 +114,7 @@ def manager_edit(request, id):
 def manager_update(request):
     for manager in Manager.objects.all():
         manager.update()
+    management.call_command('migrate', verbosity=0, interactive=False)
     messages.success(request, _(u'Update is successful'))
     return redirect('meotec:settings')
 

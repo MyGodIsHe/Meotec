@@ -4,7 +4,14 @@
     <fieldset>{% csrf_token %}
         {{ form.as_bootstrap }}
         <div class="form-actions">
-            <input type="submit" value="{% trans 'Run' %}" class="btn btn-primary"/>
+            <button type="submit" class="btn btn-danger">
+                <i class="icon-fire icon-white"></i>
+                {% trans 'Run' %}
+            </button>
+            <button type="reset" class="btn">
+                <i class="icon-remove"></i>
+                {% trans 'Cancel' %}
+            </button>
         </div>
     </fieldset>
 </form>
