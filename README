@@ -20,8 +20,11 @@ DATABASES = {
 ./manage.py migrate
 ./manage.py runserver
 
-# Now you can add the first manager.
-  At the root of the project is the Base Manager, use it.
-  Go into Settings and specify the absolute path to it.
-  On the left you can build a tree of objects.
-  After that, go to Dashboard and manage objects.
+
+USAGE
+--------------------------------------------------------------------------------
+Now you can add the first manager.
+At the root of the project is the Base Manager, use it.
+Go into Settings and specify the absolute path to it.
+On the left you can build a tree of objects.
+After that, go to Dashboard and manage objects.
