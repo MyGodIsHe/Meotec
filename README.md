@@ -16,7 +16,7 @@ Installation
         'default': {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'meotec',
-            USER': 'root',
+            'USER': 'root',
         }
     }
 
