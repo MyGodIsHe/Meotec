@@ -14,10 +14,13 @@ Installation
 
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'database',
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'meotec',
+            USER': 'root',
         }
     }
+
+Sqlite3 does not work
 
 **Migrate and run**
 
