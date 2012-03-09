@@ -1,3 +1,9 @@
+About
+_____
+
+This project allows you to control external objects (a tree). In the basic package, there are two types of objects: the server and site. Of these, one can construct a reflection of its infrastructure sites and servers. On these objects you can execute commands. Now is the management of the demons.
+
+
 Installation
 ------------
 
